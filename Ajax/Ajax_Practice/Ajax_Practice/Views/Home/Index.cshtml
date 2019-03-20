@@ -1,0 +1,148 @@
+﻿@model List<Ajax_Practice.Models.Marka>
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<hr />
+<hr />
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <label for="MarkaId">Marka</label>
+                <select class="form-control" name="MarkaId" id="MarkaId">
+                    <option value="0">Marka</option>
+                    @foreach (var item in Model)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ModelId">Model</label>
+                <select class="form-control" name="ModelId" id="ModelId">
+                    <option id="model" value="0">Model</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-5">
+        <form id="Registr" action="@Url.Action("register","home")" method="post"  enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="Fullname">Ad Soyad</label>
+                <input type="text" name="Fullname" id="Fullname" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="Email">E-poçt</label>
+                <input type="email" name="Email" id="Email" class="form-control"
+                       data-validation="server" data-validation-url="@Url.Action("usercheck","home")" />
+            </div>
+
+            <div class="form-group">
+                <label for="Password">Şifrə</label>
+                <input type="password" name="Password" id="Password" class="form-control"
+                       data-validation="strength"
+                       data-validation-strength="2" />
+            </div>
+
+            <div class="form-group">
+                <label for="PasswordAgain">Şifrə Təkrarı</label>
+                <input type="password" name="PasswordAgain" id="PasswordAgain" class="form-control"
+                       data-validation="confirmation"
+                       data-validation-confirm="Password" />
+            </div>
+
+            <div class="form-group">
+                <label for="Photo">Şəkil</label>
+                <input type="file" name="Photos" id="Photo" class="form-control" multiple
+                       data-validation="mime size"
+                       data-validation-allowing="jpg, png, gif"
+                       data-validation-max-size="1M"
+                       data-validation-error-msg-size="You can not upload images larger than 1M"
+                       data-validation-error-msg-mime="You can only upload images" />
+            </div>
+
+            <div class="alert hidden" style="width:70%"></div>
+
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+        $.validate({
+            modules: 'security,file',
+            onModulesLoaded: function () {
+                var optionalConfig = {
+                    fontSize: '12px',
+                    padding: '4px',
+                    bad: 'Çox Pis',
+                    weak: 'Zəif',
+                    good: 'Yaxşı',
+                    strong: 'Çox yaxşı'
+                };
+
+                $('input[name="Password"]').displayPasswordStrength(optionalConfig);
+            }
+        });
+
+
+        $("#Registr").submit(function (ev) {
+            ev.preventDefault();
+
+            var elem = $(this);
+
+            elem.find(".alert").addClass("hidden").removeClass("alert-success").removeClass("alert-danger");
+
+          
+
+            var formData = new FormData();
+
+            var files = elem.find("input[name='Photos']")[0].files;
+
+            for (var i = 0; i < files.length; i++)
+            {
+                formData.append('Photos', files[i], files[i].name);
+            }
+          
+            formData.append('Fullname', elem.find("input[name='Fullname']").val());
+            formData.append('Email', elem.find("input[name='Email']").val());
+            formData.append('Password', elem.find("input[name='Password']").val());
+
+            $.ajax({
+                url: elem.attr("action"),
+                type: elem.attr("method"),
+                dataType: "json",
+                data: formData,
+                enctype:"multipart/form-data",
+                cache: false,
+                contentType: false,
+                processData: false,
+                beforeSend: function () {
+                    $("#loader").fadeIn();
+                },
+                success: function (response) {
+                    $("#loader").fadeOut();
+                    if (response.status === 200) {
+                        elem.find(".alert").removeClass("hidden").addClass("alert-success").text(response.message);
+                        elem[0].reset();
+                    } else {
+                        elem.find(".alert").removeClass("hidden").addClass("alert-danger").text(response.message);
+                        console.log(elem[0]);
+                    }
+                },
+                error: function () {
+                    alert("Please,To Try Again");
+                }
+            });
+
+        });
+    </script>
+}
+
